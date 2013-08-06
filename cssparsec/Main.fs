@@ -16,7 +16,7 @@ type SingleSelector =
 
 type Selector =
     | DescendantSelector of SingleSelector * Selector
-    | NilSelector
+    | LoneSelector of SingleSelector
 
 let parseIdentifier : Parser<string, unit> =
     many1Satisfy2 isAsciiLower (fun c -> isAsciiLetter c || isDigit c || c = '_' || c = '-')
@@ -37,5 +37,9 @@ let parseSingleSelector : Parser<SingleSelector, unit> =
     attempt (tuple2 parseTagSelector parseSpecifyingSelectors) |>> SpecifiedTagSelector <|>
         (parseSpecifyingSelectors |>> SpecifyingOnlySelector)
 
+let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
+    spaces1 >>. preturn (fun a b -> match (a, b) with
+                            | LoneSelector(s), s2 -> DescendantSelector (s, s2))
+
 let parseSelector : Parser<Selector, unit> =
-    sepBy1 parseSingleSelector spaces1 |>> (fun l -> List.foldBack (fun e acc -> DescendantSelector (e, acc)) l NilSelector)
+    chainr1 (parseSingleSelector |>> (fun s -> LoneSelector s)) parseSelectorSeparator
