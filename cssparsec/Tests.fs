@@ -42,9 +42,12 @@ let testSelectorForSpecifiedTags() =
 
 [<Test>]
 let testDescendantSelectors() =
-    Assert.AreEqual(DescendantSelector [SpecifiedTagSelector (TagSelector "span", []);
-                     SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]);
-                     SpecifyingOnlySelector [IdSelector "bar"]],
+    Assert.AreEqual(DescendantSelector (SpecifiedTagSelector (TagSelector "span", []), NilSelector),
+                    go parseSelector "span");
+    Assert.AreEqual(DescendantSelector (SpecifiedTagSelector (TagSelector "span", []),
+                        DescendantSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+                            DescendantSelector (SpecifyingOnlySelector [IdSelector "bar"],
+                                NilSelector))),
                     go parseSelector "span div.foo #bar")
 
 [<EntryPoint>]
