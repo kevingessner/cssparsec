@@ -70,10 +70,13 @@ let parseClassSelector : Parser<SpecifyingSelector, unit> =
     (pchar '.' >>? parseIdentifier) |>> ClassSelector
 
 let parseAttributeSelector : Parser<SpecifyingSelector, unit> =
-    between (pchar '[') (pchar ']') (parseIdentifier .>>. choice [pchar '=' >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, IsEqualTo, v)));
-                                                                  pstring "~=" >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, ContainsWord, v)));
-                                                                  pstring "|=" >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, ContainsLang, v)));
-                                                                  preturn (fun k -> HasAttributeSelector k)]) |>> (fun (k, f) -> f k)
+    let parseAttributeTail (k, t) =
+        match t with
+        | Some t1 -> parseIdentifier |>> (fun v -> AttributeValueSelector (k, t1, v))
+        | None -> preturn (HasAttributeSelector k)
+    between (pchar '[') (pchar ']') (((parseIdentifier .>>. opt (choice [pstring "=" >>% IsEqualTo;
+                                                                         pstring "~=" >>% ContainsWord;
+                                                                         pstring "|=" >>% ContainsLang]))) >>= parseAttributeTail)
 
 let parsePseudoSelector : Parser<SpecifyingSelector, unit> =
     (pchar ':' >>? parseIdentifier) .>>. (opt (between (pchar '(') (pchar ')') (many1Satisfy (fun c -> c <> ')'))))
