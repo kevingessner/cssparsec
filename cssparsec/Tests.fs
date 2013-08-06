@@ -49,5 +49,22 @@ let testDescendantSelectors() =
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span div.foo #bar")
 
+[<Test>]
+let testSiblingSelectors() =
+    Assert.AreEqual(SiblingSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+                        LoneSelector (SpecifyingOnlySelector [IdSelector "bar"])),
+                    go parseSelector "div.foo + #bar")
+
+[<Test>]
+let testMixedSelectors() =
+    Assert.AreEqual(DescendantSelector (SpecifiedTagSelector (TagSelector "span", []),
+                        SiblingSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+                            LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
+                    go parseSelector "span div.foo + #bar")
+    Assert.AreEqual(SiblingSelector (SpecifiedTagSelector (TagSelector "span", []),
+                        DescendantSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+                            LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
+                    go parseSelector "span + div.foo #bar")
+
 [<EntryPoint>]
 let main args = 0

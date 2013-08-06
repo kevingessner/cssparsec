@@ -16,6 +16,7 @@ type SingleSelector =
 
 type Selector =
     | DescendantSelector of SingleSelector * Selector
+    | SiblingSelector of SingleSelector * Selector
     | LoneSelector of SingleSelector
 
 let parseIdentifier : Parser<string, unit> =
@@ -38,8 +39,10 @@ let parseSingleSelector : Parser<SingleSelector, unit> =
         (parseSpecifyingSelectors |>> SpecifyingOnlySelector)
 
 let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
-    spaces1 >>. preturn (fun a b -> match (a, b) with
-                            | LoneSelector(s), s2 -> DescendantSelector (s, s2))
+    choice [attempt (spaces >>. pchar '+' >>. preturn (fun a b -> match (a, b) with
+                                                                  | LoneSelector(s), s2 -> SiblingSelector (s, s2)));
+            spaces1 >>. preturn (fun a b -> match (a, b) with
+                                            | LoneSelector(s), s2 -> DescendantSelector (s, s2))]
 
 let parseSelector : Parser<Selector, unit> =
-    chainr1 (parseSingleSelector |>> (fun s -> LoneSelector s)) parseSelectorSeparator
+    chainr1 (parseSingleSelector |>> (fun s -> LoneSelector s)) (parseSelectorSeparator .>> spaces)
