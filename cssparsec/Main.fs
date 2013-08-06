@@ -2,6 +2,7 @@
 
 open FParsec
 open System
+open Microsoft.FSharp.Reflection
 
 type AttributeValueSelectorOperation =
     | IsEqualTo
@@ -74,9 +75,11 @@ let parseAttributeSelector : Parser<SpecifyingSelector, unit> =
         match t with
         | Some t1 -> parseIdentifier |>> (fun v -> AttributeValueSelector (k, t1, v))
         | None -> preturn (HasAttributeSelector k)
-    between (pchar '[') (pchar ']') (((parseIdentifier .>>. opt (choice [pstring "=" >>% IsEqualTo;
-                                                                         pstring "~=" >>% ContainsWord;
-                                                                         pstring "|=" >>% ContainsLang]))) >>= parseAttributeTail)
+    let operationParsers =
+        let cases = [for t in FSharpType.GetUnionCases typeof<AttributeValueSelectorOperation>
+                         do yield FSharpValue.MakeUnion(t, [| |]) :?> AttributeValueSelectorOperation]
+        [for t in cases do yield pstring (t.ToString()) >>% t]
+    between (pchar '[') (pchar ']') (((parseIdentifier .>>. opt (choice operationParsers))) >>= parseAttributeTail)
 
 let parsePseudoSelector : Parser<SpecifyingSelector, unit> =
     (pchar ':' >>? parseIdentifier) .>>. (opt (between (pchar '(') (pchar ')') (many1Satisfy (fun c -> c <> ')'))))
