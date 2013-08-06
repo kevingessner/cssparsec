@@ -48,6 +48,13 @@ type Selector =
     | SiblingSelector of SingleSelector * Selector
     | ChildSelector of SingleSelector * Selector
     | LoneSelector of SingleSelector
+    with
+        override this.ToString() =
+            match this with
+            | DescendantSelector(h, t) -> String.Format("{0} {1}", h, t)
+            | SiblingSelector(h, t) -> String.Format("{0} + {1}", h, t)
+            | ChildSelector(h, t) -> String.Format("{0} > {1}", h, t)
+            | LoneSelector(s) -> s.ToString()
 
 let parseIdentifier : Parser<string, unit> =
     many1Satisfy2 isAsciiLower (fun c -> isAsciiLetter c || isDigit c || c = '_' || c = '-')

@@ -101,5 +101,10 @@ let testMixedSelectors() =
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span > div.foo > #bar")
 
+[<Test>]
+let testToString() =
+    let s = "span[baz] > #foo.bar + a + b[bar~=asdf] div > span[quux|=quux]"
+    Assert.AreEqual(s, (go parseSelector s).ToString())
+
 [<EntryPoint>]
 let main args = 0
