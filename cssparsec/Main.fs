@@ -7,19 +7,41 @@ type AttributeValueSelectorOperation =
     | IsEqualTo
     | ContainsWord
     | ContainsLang
+    with
+        override this.ToString() =
+            match this with
+            | IsEqualTo -> "="
+            | ContainsWord -> "~="
+            | ContainsLang -> "|="
 
 type SpecifyingSelector =
     | IdSelector of string
     | ClassSelector of string
     | HasAttributeSelector of string
     | AttributeValueSelector of string * AttributeValueSelectorOperation * string
+    with
+        override this.ToString() =
+            match this with
+            | IdSelector(s) -> "#" + s
+            | ClassSelector(s) -> "." + s
+            | HasAttributeSelector(s) -> "[" + s + "]"
+            | AttributeValueSelector(k, t, v) -> String.Format("[{0}{1}{2}]", k, t, v)
 
 type TagSelector =
     | TagSelector of string
+    with
+        override this.ToString() =
+            match this with
+            | TagSelector(s) -> s
 
 type SingleSelector =
     | SpecifyingOnlySelector of SpecifyingSelector list
     | SpecifiedTagSelector of TagSelector * (SpecifyingSelector list)
+    with
+        override this.ToString() =
+            match this with
+            | SpecifyingOnlySelector(l) -> String.Join("", l)
+            | SpecifiedTagSelector(t, l) -> t.ToString() + String.Join("", l)
 
 type Selector =
     | DescendantSelector of SingleSelector * Selector
