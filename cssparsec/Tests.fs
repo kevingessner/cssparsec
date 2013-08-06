@@ -51,6 +51,14 @@ let testSelectorForSpecifiedTags() =
     Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [HasAttributeSelector "foo"; AttributeValueSelector ("bar", IsEqualTo, "quux")]), go parseSingleSelector "span[foo][bar=quux]")
 
 [<Test>]
+let testUniversalSelector() =
+    Assert.AreEqual(SpecifyingOnlySelector [], go parseSingleSelector "*")
+    Assert.AreEqual(SpecifyingOnlySelector [IdSelector "id"], go parseSingleSelector "*#id")
+    Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "class"], go parseSingleSelector "*.class")
+    Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "abc"; ClassSelector "defg"], go parseSingleSelector "*.abc.defg")
+    Assert.AreEqual(SpecifyingOnlySelector [AttributeValueSelector ("foo", ContainsLang, "bar"); ClassSelector "abc"; AttributeValueSelector ("baz", ContainsWord, "quux")], go parseSingleSelector "*[foo|=bar].abc[baz~=quux]")
+
+[<Test>]
 let testDescendantSelectors() =
     Assert.AreEqual(LoneSelector (SpecifiedTagSelector (TagSelector "span", [])),
                     go parseSelector "span");
@@ -58,6 +66,9 @@ let testDescendantSelectors() =
                         DescendantSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span div.foo #bar")
+    Assert.AreEqual(DescendantSelector (SpecifyingOnlySelector [HasAttributeSelector "baz"],
+                        LoneSelector (SpecifiedTagSelector (TagSelector "span", []))),
+                    go parseSelector "*[baz] span");
 
 [<Test>]
 let testSiblingSelectors() =

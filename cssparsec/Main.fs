@@ -71,7 +71,7 @@ let parseTagSelector : Parser<TagSelector, unit> =
 
 let parseSingleSelector : Parser<SingleSelector, unit> =
     attempt (tuple2 parseTagSelector parseSpecifyingSelectors) |>> SpecifiedTagSelector <|>
-        (parseSpecifyingSelectors |>> SpecifyingOnlySelector)
+        (optional (pstring "*") >>. parseSpecifyingSelectors |>> SpecifyingOnlySelector)
 
 let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
     let _unpackWithSeparatorType f : (Selector -> Selector -> Selector) =
