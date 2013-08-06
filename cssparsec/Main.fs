@@ -46,6 +46,7 @@ type SingleSelector =
 type Selector =
     | DescendantSelector of SingleSelector * Selector
     | SiblingSelector of SingleSelector * Selector
+    | ChildSelector of SingleSelector * Selector
     | LoneSelector of SingleSelector
 
 let parseIdentifier : Parser<string, unit> =
@@ -78,6 +79,7 @@ let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
         (fun a b -> match (a, b) with
                     | LoneSelector(s), s2 -> f (s, s2))
     choice [attempt (spaces >>. pchar '+' >>. preturn (_unpackWithSeparatorType SiblingSelector));
+            attempt (spaces >>. pchar '>' >>. preturn (_unpackWithSeparatorType ChildSelector));
             spaces1 >>. preturn (_unpackWithSeparatorType DescendantSelector)]
 
 let parseSelector : Parser<Selector, unit> =
