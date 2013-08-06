@@ -19,6 +19,8 @@ type SpecifyingSelector =
     | ClassSelector of string
     | HasAttributeSelector of string
     | AttributeValueSelector of string * AttributeValueSelectorOperation * string
+    | PseudoSelector of string
+    | PseudoSelectorWithArgument of (string * string)
     with
         override this.ToString() =
             match this with
@@ -26,6 +28,8 @@ type SpecifyingSelector =
             | ClassSelector(s) -> "." + s
             | HasAttributeSelector(s) -> "[" + s + "]"
             | AttributeValueSelector(k, t, v) -> String.Format("[{0}{1}{2}]", k, t, v)
+            | PseudoSelector(s) -> ":" + s
+            | PseudoSelectorWithArgument(k, v) -> String.Format(":{0}({1})", k, v)
 
 type TagSelector =
     | TagSelector of string
@@ -71,8 +75,14 @@ let parseAttributeSelector : Parser<SpecifyingSelector, unit> =
                                                                   pstring "|=" >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, ContainsLang, v)));
                                                                   preturn (fun k -> HasAttributeSelector k)]) |>> (fun (k, f) -> f k)
 
+let parsePseudoSelector : Parser<SpecifyingSelector, unit> =
+    (pchar ':' >>? parseIdentifier) .>>. (opt (between (pchar '(') (pchar ')') (many1Satisfy (fun c -> c <> ')'))))
+        |>> (fun (k, v) -> match v with
+                           | None -> PseudoSelector k
+                           | Some v1 -> PseudoSelectorWithArgument (k, v1))
+
 let parseSpecifyingSelectors : Parser<SpecifyingSelector list, unit> =
-    many (choice [parseIdSelector; parseClassSelector; parseAttributeSelector])
+    many (choice [parseIdSelector; parseClassSelector; parseAttributeSelector; parsePseudoSelector])
 
 let parseTagSelector : Parser<TagSelector, unit> =
     (many1Satisfy isAsciiLower) |>> TagSelector

@@ -32,11 +32,17 @@ let testAttributeSelector() =
     ignore (Assert.Throws<Exception>(fun _ -> (ignore (go parseAttributeSelector "[attr^=val]"))))
 
 [<Test>]
+let testPseudoSelector() =
+    Assert.AreEqual(PseudoSelector "first-line", go parsePseudoSelector ":first-line")
+    Assert.AreEqual(PseudoSelectorWithArgument ("lang", "en"), go parsePseudoSelector ":lang(en)")
+
+[<Test>]
 let testSelectorForSpecifiers() =
     Assert.AreEqual(SpecifyingOnlySelector [IdSelector "id"], go parseSingleSelector "#id")
     Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "class"], go parseSingleSelector ".class")
     Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "abc"; ClassSelector "defg"], go parseSingleSelector ".abc.defg")
     Assert.AreEqual(SpecifyingOnlySelector [AttributeValueSelector ("foo", ContainsLang, "bar"); ClassSelector "abc"; AttributeValueSelector ("baz", ContainsWord, "quux")], go parseSingleSelector "[foo|=bar].abc[baz~=quux]")
+    Assert.AreEqual(SpecifyingOnlySelector [PseudoSelector "foo"; PseudoSelectorWithArgument ("baz", "quux")], go parseSingleSelector ":foo:baz(quux)")
 
 [<Test>]
 let testSelectorForTag() =
@@ -49,6 +55,7 @@ let testSelectorForSpecifiedTags() =
     Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [ClassSelector "foo"; ClassSelector "bar"]), go parseSingleSelector "span.foo.bar")
     Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [IdSelector "foo"; ClassSelector "bar"]), go parseSingleSelector "span#foo.bar")
     Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [HasAttributeSelector "foo"; AttributeValueSelector ("bar", IsEqualTo, "quux")]), go parseSingleSelector "span[foo][bar=quux]")
+    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [PseudoSelector "foo"]), go parseSingleSelector "span:foo")
 
 [<Test>]
 let testUniversalSelector() =
@@ -57,6 +64,7 @@ let testUniversalSelector() =
     Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "class"], go parseSingleSelector "*.class")
     Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "abc"; ClassSelector "defg"], go parseSingleSelector "*.abc.defg")
     Assert.AreEqual(SpecifyingOnlySelector [AttributeValueSelector ("foo", ContainsLang, "bar"); ClassSelector "abc"; AttributeValueSelector ("baz", ContainsWord, "quux")], go parseSingleSelector "*[foo|=bar].abc[baz~=quux]")
+    Assert.AreEqual(SpecifyingOnlySelector [PseudoSelector "foo"; PseudoSelectorWithArgument ("baz", "quux")], go parseSingleSelector "*:foo:baz(quux)")
 
 [<Test>]
 let testDescendantSelectors() =
@@ -103,7 +111,7 @@ let testMixedSelectors() =
 
 [<Test>]
 let testToString() =
-    let s = "span[baz] > #foo.bar + a + b[bar~=asdf] div > span[quux|=quux]"
+    let s = "span[baz] > #foo.bar #baz + a hr:first-letter + b[bar~=asdf] div > span[quux|=quux] article:lang(fr-FR)"
     Assert.AreEqual(s, (go parseSelector s).ToString())
 
 [<EntryPoint>]
