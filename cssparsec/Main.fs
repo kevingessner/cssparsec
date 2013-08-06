@@ -3,9 +3,16 @@
 open FParsec
 open System
 
+type AttributeValueSelectorOperation =
+    | IsEqualTo
+    | ContainsWord
+    | ContainsLang
+
 type SpecifyingSelector =
     | IdSelector of string
     | ClassSelector of string
+    | HasAttributeSelector of string
+    | AttributeValueSelector of string * AttributeValueSelectorOperation * string
 
 type TagSelector =
     | TagSelector of string
@@ -28,8 +35,14 @@ let parseIdSelector : Parser<SpecifyingSelector, unit> =
 let parseClassSelector : Parser<SpecifyingSelector, unit> =
     (pchar '.' >>? parseIdentifier) |>> ClassSelector
 
+let parseAttributeSelector : Parser<SpecifyingSelector, unit> =
+    between (pchar '[') (pchar ']') (parseIdentifier .>>. choice [pchar '=' >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, IsEqualTo, v)));
+                                                                  pstring "~=" >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, ContainsWord, v)));
+                                                                  pstring "|=" >>. parseIdentifier |>> (fun v -> (fun k -> AttributeValueSelector (k, ContainsLang, v)));
+                                                                  preturn (fun k -> HasAttributeSelector k)]) |>> (fun (k, f) -> f k)
+
 let parseSpecifyingSelectors : Parser<SpecifyingSelector list, unit> =
-    many (choice [parseIdSelector; parseClassSelector])
+    many (choice [parseIdSelector; parseClassSelector; parseAttributeSelector])
 
 let parseTagSelector : Parser<TagSelector, unit> =
     (many1Satisfy isAsciiLower) |>> TagSelector
