@@ -85,7 +85,7 @@ let parseSpecifyingSelectors : Parser<SpecifyingSelector list, unit> =
     many (choice [parseIdSelector; parseClassSelector; parseAttributeSelector; parsePseudoSelector])
 
 let parseTagSelector : Parser<TagSelector, unit> =
-    (many1Satisfy isAsciiLower) |>> TagSelector
+    (many1Satisfy2 isAsciiLower (fun c -> isAsciiLower c || isDigit c)) |>> TagSelector
 
 let parseSingleSelector : Parser<SingleSelector, unit> =
     attempt (tuple2 parseTagSelector parseSpecifyingSelectors) |>> SpecifiedTagSelector <|>

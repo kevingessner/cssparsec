@@ -47,6 +47,7 @@ let testSelectorForSpecifiers() =
 [<Test>]
 let testSelectorForTag() =
     Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", []), go parseSingleSelector "span")
+    Assert.AreEqual(SpecifiedTagSelector (TagSelector "h1", []), go parseSingleSelector "h1")
 
 [<Test>]
 let testSelectorForSpecifiedTags() =
