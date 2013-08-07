@@ -66,6 +66,7 @@ let testUniversalSelector() =
     Assert.AreEqual(SpecifyingOnlySelector [ClassSelector "abc"; ClassSelector "defg"], go parseSingleSelector "*.abc.defg")
     Assert.AreEqual(SpecifyingOnlySelector [AttributeValueSelector ("foo", ContainsLang, "bar"); ClassSelector "abc"; AttributeValueSelector ("baz", ContainsWord, "quux")], go parseSingleSelector "*[foo|=bar].abc[baz~=quux]")
     Assert.AreEqual(SpecifyingOnlySelector [PseudoSelector "foo"; PseudoSelectorWithArgument ("baz", "quux")], go parseSingleSelector "*:foo:baz(quux)")
+    ignore (Assert.Throws<Exception>(fun _ -> (ignore (go parseSelector ".foo*"))))
 
 [<Test>]
 let testDescendantSelectors() =
@@ -90,6 +91,9 @@ let testChildSelectors() =
     Assert.AreEqual(ChildSelector (SpecifyingOnlySelector [ClassSelector "foo"],
                         LoneSelector (SpecifyingOnlySelector [])),
                     go parseSelector ".foo > *")
+    Assert.AreEqual(ChildSelector (SpecifyingOnlySelector [ClassSelector "foo"],
+                        LoneSelector (SpecifyingOnlySelector [])),
+                    go parseSelector ".foo>*")
 
 [<Test>]
 let testMixedSelectors() =

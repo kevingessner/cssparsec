@@ -101,9 +101,10 @@ let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
     let _unpackWithSeparatorType f : (Selector -> Selector -> Selector) =
         (fun a b -> match (a, b) with
                     | LoneSelector(s), s2 -> f (s, s2))
-    choice [attempt (spaces >>. pchar '+' >>. preturn (_unpackWithSeparatorType SiblingSelector));
-            attempt (spaces >>. pchar '>' >>. preturn (_unpackWithSeparatorType ChildSelector));
-            spaces1 >>. preturn (_unpackWithSeparatorType DescendantSelector)]
+    (spaces1 >>% preturn DescendantSelector <|> preturn pzero)
+        >>= (fun p -> choice [pchar '+' >>% SiblingSelector;
+                              pchar '>' >>% ChildSelector;
+                              p]) |>> _unpackWithSeparatorType
 
 let parseSelector : Parser<Selector, unit> =
-    chainr1 (parseSingleSelector |>> LoneSelector) (parseSelectorSeparator .>> spaces)
+    chainr1 (parseSingleSelector |>> LoneSelector) (parseSelectorSeparator .>> spaces) .>> eof
