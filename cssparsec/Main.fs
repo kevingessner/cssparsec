@@ -28,9 +28,9 @@ type SpecifyingSelector =
             | IdSelector(s) -> "#" + s
             | ClassSelector(s) -> "." + s
             | HasAttributeSelector(s) -> "[" + s + "]"
-            | AttributeValueSelector(k, t, v) -> String.Format("[{0}{1}{2}]", k, t, v)
+            | AttributeValueSelector(k, t, v) -> sprintf "[%s%O%s]" k t v
             | PseudoSelector(s) -> ":" + s
-            | PseudoSelectorWithArgument(k, v) -> String.Format(":{0}({1})", k, v)
+            | PseudoSelectorWithArgument(k, v) -> sprintf ":%s(%O)" k v
 
 type TypeSelector =
     | TagSelector of string
@@ -47,8 +47,9 @@ type SingleSelector =
         override this.ToString() =
             match this with
             | SingleSelector(UniversalSelector, []) -> UniversalSelector.ToString()
-            | SingleSelector(UniversalSelector, l) -> String.Join("", l)
-            | SingleSelector(t, l) -> t.ToString() + String.Join("", l)
+            | SingleSelector(UniversalSelector, l) -> List.reduce (+) (List.map string l)
+            | SingleSelector(t, []) -> string t
+            | SingleSelector(t, l) -> string t + List.reduce (+) (List.map string l)
 
 let SpecifyingOnlySelector l =
     SingleSelector (UniversalSelector, l)
@@ -61,10 +62,10 @@ type Selector =
     with
         override this.ToString() =
             match this with
-            | DescendantSelector(h, t) -> String.Format("{0} {1}", h, t)
-            | SiblingSelector(h, t) -> String.Format("{0} + {1}", h, t)
-            | ChildSelector(h, t) -> String.Format("{0} > {1}", h, t)
-            | LoneSelector(s) -> s.ToString()
+            | DescendantSelector(h, t) -> sprintf "%O %O" h t
+            | SiblingSelector(h, t) -> sprintf "%O + %O" h t
+            | ChildSelector(h, t) -> sprintf "%O > %O" h t
+            | LoneSelector(s) -> string s
 
 let parseIdentifier : Parser<string, unit> =
     many1Satisfy2 isAsciiLower (fun c -> isAsciiLetter c || isDigit c || c = '_' || c = '-')
