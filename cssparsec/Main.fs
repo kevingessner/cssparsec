@@ -94,7 +94,7 @@ let parseTagSelector : Parser<TagSelector, unit> =
     (many1Satisfy2 isAsciiLower (fun c -> isAsciiLower c || isDigit c)) |>> TagSelector
 
 let parseSingleSelector : Parser<SingleSelector, unit> =
-    attempt (tuple2 parseTagSelector parseSpecifyingSelectors) |>> SpecifiedTagSelector <|>
+    attempt (parseTagSelector .>>. parseSpecifyingSelectors) |>> SpecifiedTagSelector <|>
         (optional (pstring "*") >>. parseSpecifyingSelectors |>> SpecifyingOnlySelector)
 
 let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
@@ -106,4 +106,4 @@ let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
             spaces1 >>. preturn (_unpackWithSeparatorType DescendantSelector)]
 
 let parseSelector : Parser<Selector, unit> =
-    chainr1 (parseSingleSelector |>> (fun s -> LoneSelector s)) (parseSelectorSeparator .>> spaces)
+    chainr1 (parseSingleSelector |>> LoneSelector) (parseSelectorSeparator .>> spaces)
