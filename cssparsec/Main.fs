@@ -32,21 +32,26 @@ type SpecifyingSelector =
             | PseudoSelector(s) -> ":" + s
             | PseudoSelectorWithArgument(k, v) -> String.Format(":{0}({1})", k, v)
 
-type TagSelector =
+type TypeSelector =
     | TagSelector of string
+    | UniversalSelector
     with
         override this.ToString() =
             match this with
             | TagSelector(s) -> s
+            | UniversalSelector -> "*"
 
 type SingleSelector =
-    | SpecifyingOnlySelector of SpecifyingSelector list
-    | SpecifiedTagSelector of TagSelector * (SpecifyingSelector list)
+    | SingleSelector of TypeSelector * (SpecifyingSelector list)
     with
         override this.ToString() =
             match this with
-            | SpecifyingOnlySelector(l) -> String.Join("", l)
-            | SpecifiedTagSelector(t, l) -> t.ToString() + String.Join("", l)
+            | SingleSelector(UniversalSelector, []) -> UniversalSelector.ToString()
+            | SingleSelector(UniversalSelector, l) -> String.Join("", l)
+            | SingleSelector(t, l) -> t.ToString() + String.Join("", l)
+
+let SpecifyingOnlySelector l =
+    SingleSelector (UniversalSelector, l)
 
 type Selector =
     | DescendantSelector of SingleSelector * Selector
@@ -90,12 +95,11 @@ let parsePseudoSelector : Parser<SpecifyingSelector, unit> =
 let parseSpecifyingSelectors : Parser<SpecifyingSelector list, unit> =
     many (choice [parseIdSelector; parseClassSelector; parseAttributeSelector; parsePseudoSelector])
 
-let parseTagSelector : Parser<TagSelector, unit> =
+let parseTagSelector : Parser<TypeSelector, unit> =
     (many1Satisfy2 isAsciiLower (fun c -> isAsciiLower c || isDigit c)) |>> TagSelector
 
 let parseSingleSelector : Parser<SingleSelector, unit> =
-    attempt (parseTagSelector .>>. parseSpecifyingSelectors) |>> SpecifiedTagSelector <|>
-        (optional (pstring "*") >>. parseSpecifyingSelectors |>> SpecifyingOnlySelector)
+    (parseTagSelector <|> (optional (pstring "*") >>% UniversalSelector)) .>>. parseSpecifyingSelectors |>> SingleSelector
 
 let parseSelectorSeparator : Parser<(Selector -> Selector -> Selector), unit> =
     let _unpackWithSeparatorType f : (Selector -> Selector -> Selector) =

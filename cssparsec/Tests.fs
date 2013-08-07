@@ -46,17 +46,17 @@ let testSelectorForSpecifiers() =
 
 [<Test>]
 let testSelectorForTag() =
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", []), go parseSingleSelector "span")
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "h1", []), go parseSingleSelector "h1")
+    Assert.AreEqual(SingleSelector (TagSelector "span", []), go parseSingleSelector "span")
+    Assert.AreEqual(SingleSelector (TagSelector "h1", []), go parseSingleSelector "h1")
 
 [<Test>]
 let testSelectorForSpecifiedTags() =
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [IdSelector "foo"]), go parseSingleSelector "span#foo")
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [ClassSelector "foo"]), go parseSingleSelector "span.foo")
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [ClassSelector "foo"; ClassSelector "bar"]), go parseSingleSelector "span.foo.bar")
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [IdSelector "foo"; ClassSelector "bar"]), go parseSingleSelector "span#foo.bar")
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [HasAttributeSelector "foo"; AttributeValueSelector ("bar", IsEqualTo, "quux")]), go parseSingleSelector "span[foo][bar=quux]")
-    Assert.AreEqual(SpecifiedTagSelector (TagSelector "span", [PseudoSelector "foo"]), go parseSingleSelector "span:foo")
+    Assert.AreEqual(SingleSelector (TagSelector "span", [IdSelector "foo"]), go parseSingleSelector "span#foo")
+    Assert.AreEqual(SingleSelector (TagSelector "span", [ClassSelector "foo"]), go parseSingleSelector "span.foo")
+    Assert.AreEqual(SingleSelector (TagSelector "span", [ClassSelector "foo"; ClassSelector "bar"]), go parseSingleSelector "span.foo.bar")
+    Assert.AreEqual(SingleSelector (TagSelector "span", [IdSelector "foo"; ClassSelector "bar"]), go parseSingleSelector "span#foo.bar")
+    Assert.AreEqual(SingleSelector (TagSelector "span", [HasAttributeSelector "foo"; AttributeValueSelector ("bar", IsEqualTo, "quux")]), go parseSingleSelector "span[foo][bar=quux]")
+    Assert.AreEqual(SingleSelector (TagSelector "span", [PseudoSelector "foo"]), go parseSingleSelector "span:foo")
 
 [<Test>]
 let testUniversalSelector() =
@@ -70,19 +70,19 @@ let testUniversalSelector() =
 
 [<Test>]
 let testDescendantSelectors() =
-    Assert.AreEqual(LoneSelector (SpecifiedTagSelector (TagSelector "span", [])),
+    Assert.AreEqual(LoneSelector (SingleSelector (TagSelector "span", [])),
                     go parseSelector "span");
-    Assert.AreEqual(DescendantSelector (SpecifiedTagSelector (TagSelector "span", []),
-                        DescendantSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+    Assert.AreEqual(DescendantSelector (SingleSelector (TagSelector "span", []),
+                        DescendantSelector (SingleSelector (TagSelector "div", [ClassSelector "foo"]),
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span div.foo #bar")
     Assert.AreEqual(DescendantSelector (SpecifyingOnlySelector [HasAttributeSelector "baz"],
-                        LoneSelector (SpecifiedTagSelector (TagSelector "span", []))),
+                        LoneSelector (SingleSelector (TagSelector "span", []))),
                     go parseSelector "*[baz] span");
 
 [<Test>]
 let testSiblingSelectors() =
-    Assert.AreEqual(SiblingSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+    Assert.AreEqual(SiblingSelector (SingleSelector (TagSelector "div", [ClassSelector "foo"]),
                         LoneSelector (SpecifyingOnlySelector [IdSelector "bar"])),
                     go parseSelector "div.foo + #bar")
 
@@ -97,26 +97,26 @@ let testChildSelectors() =
 
 [<Test>]
 let testMixedSelectors() =
-    Assert.AreEqual(DescendantSelector (SpecifiedTagSelector (TagSelector "span", []),
-                        SiblingSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+    Assert.AreEqual(DescendantSelector (SingleSelector (TagSelector "span", []),
+                        SiblingSelector (SingleSelector (TagSelector "div", [ClassSelector "foo"]),
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span div.foo + #bar")
-    Assert.AreEqual(SiblingSelector (SpecifiedTagSelector (TagSelector "span", []),
-                        DescendantSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+    Assert.AreEqual(SiblingSelector (SingleSelector (TagSelector "span", []),
+                        DescendantSelector (SingleSelector (TagSelector "div", [ClassSelector "foo"]),
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span + div.foo #bar")
-    Assert.AreEqual(ChildSelector (SpecifiedTagSelector (TagSelector "span", []),
-                        SiblingSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+    Assert.AreEqual(ChildSelector (SingleSelector (TagSelector "span", []),
+                        SiblingSelector (SingleSelector (TagSelector "div", [ClassSelector "foo"]),
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span > div.foo + #bar")
-    Assert.AreEqual(ChildSelector (SpecifiedTagSelector (TagSelector "span", []),
-                        ChildSelector (SpecifiedTagSelector (TagSelector "div", [ClassSelector "foo"]),
+    Assert.AreEqual(ChildSelector (SingleSelector (TagSelector "span", []),
+                        ChildSelector (SingleSelector (TagSelector "div", [ClassSelector "foo"]),
                             LoneSelector (SpecifyingOnlySelector [IdSelector "bar"]))),
                     go parseSelector "span > div.foo > #bar")
 
 [<Test>]
 let testToString() =
-    let s = "span[baz] > #foo.bar #baz + a hr:first-letter + b[bar~=asdf] div > span[quux|=quux] article:lang(fr-FR)"
+    let s = "span[baz] > #foo.bar #baz + a hr:first-letter + b[bar~=asdf] * div > span[quux|=quux] article:lang(fr-FR)"
     Assert.AreEqual(s, (go parseSelector s).ToString())
 
 [<EntryPoint>]
